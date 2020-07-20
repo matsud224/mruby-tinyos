@@ -85,45 +85,45 @@ MRuby::Build.new do |conf|
   # conf.enable_bintest
 end
 
-MRuby::Build.new('host-debug') do |conf|
-  # load specific toolchain settings
+#MRuby::Build.new('host-debug') do |conf|
+#  # load specific toolchain settings
+#
+#  # Gets set by the VS command prompts.
+#  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
+#    toolchain :visualcpp
+#  else
+#    toolchain :gcc
+#  end
+#
+#  enable_debug
+#
+#  # include the default GEMs
+#  conf.gembox 'default'
+#
+#  # C compiler settings
+#  conf.cc.defines = %w(MRB_ENABLE_DEBUG_HOOK)
+#
+#  # Generate mruby debugger command (require mruby-eval)
+#  conf.gem :core => "mruby-bin-debugger"
+#
+#  # bintest
+#  # conf.enable_bintest
+#end
 
-  # Gets set by the VS command prompts.
-  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
-    toolchain :visualcpp
-  else
-    toolchain :gcc
-  end
-
-  enable_debug
-
-  # include the default GEMs
-  conf.gembox 'default'
-
-  # C compiler settings
-  conf.cc.defines = %w(MRB_ENABLE_DEBUG_HOOK)
-
-  # Generate mruby debugger command (require mruby-eval)
-  conf.gem :core => "mruby-bin-debugger"
-
-  # bintest
-  # conf.enable_bintest
-end
-
-MRuby::Build.new('test') do |conf|
-  # Gets set by the VS command prompts.
-  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
-    toolchain :visualcpp
-  else
-    toolchain :gcc
-  end
-
-  enable_debug
-  conf.enable_bintest
-  conf.enable_test
-
-  conf.gembox 'default'
-end
+#MRuby::Build.new('test') do |conf|
+#  # Gets set by the VS command prompts.
+#  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
+#    toolchain :visualcpp
+#  else
+#    toolchain :gcc
+#  end
+#
+#  enable_debug
+#  conf.enable_bintest
+#  conf.enable_test
+#
+#  conf.gembox 'default'
+#end
 
 #MRuby::Build.new('bench') do |conf|
 #  # Gets set by the VS command prompts.
@@ -138,15 +138,24 @@ end
 #end
 
 # Define cross build settings
-# MRuby::CrossBuild.new('32bit') do |conf|
-#   toolchain :gcc
-#
-#   conf.cc.flags << "-m32"
-#   conf.linker.flags << "-m32"
-#
-#   conf.build_mrbtest_lib_only
-#
-#   conf.gem 'examples/mrbgems/c_and_ruby_extension_example'
-#
-#   conf.test_runner.command = 'env'
-# end
+MRuby::CrossBuild.new('tinyos') do |conf|
+  toolchain :gcc
+
+  conf.linker.command = "i686-elf-gcc"
+  conf.archiver.command = "i686-elf-ar"
+
+# C compiler settings
+  conf.cc do |cc|
+    conf.cc.command = "i686-elf-gcc"
+    cc.include_paths = ["#{root}/include", "#{root}/../mruby-fake-include"]
+    cc.defines = %w(MRB_WITHOUT_FLOAT MRB_DISABLE_STDIO MRB_CONSTRAINED_BASELINE_PROFILE)
+    cc.compile_options = "%{flags} -ffreestanding -o %{outfile} -c %{infile}"
+  end
+
+  conf.build_mrbtest_lib_only
+
+  conf.gem "#{root}/mrbgems/mruby-compiler"
+  #conf.gem "#{root}/mrbgems/mruby-print"
+
+  conf.test_runner.command = 'env'
+end
