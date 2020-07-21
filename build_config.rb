@@ -147,15 +147,27 @@ MRuby::CrossBuild.new('tinyos') do |conf|
 # C compiler settings
   conf.cc do |cc|
     conf.cc.command = "i686-elf-gcc"
-    cc.include_paths = ["#{root}/include", "#{root}/../mruby-fake-include"]
+    cc.include_paths = ["#{root}/include", "#{root}/../mruby-fake-include", "#{root}/.."]
     cc.defines = %w(_TINYOS_KERNEL MRB_WITHOUT_FLOAT MRB_DISABLE_STDIO MRB_CONSTRAINED_BASELINE_PROFILE)
     cc.compile_options = "%{flags} -ffreestanding -o %{outfile} -c %{infile}"
   end
 
   conf.build_mrbtest_lib_only
 
+  conf.gem "#{root}/mrbgems/mruby-tinyos"
   conf.gem "#{root}/mrbgems/mruby-compiler"
   conf.gem "#{root}/mrbgems/mruby-print"
+  conf.gem "#{root}/mrbgems/mruby-sprintf"
+  conf.gem "#{root}/mrbgems/mruby-struct"
+  conf.gem "#{root}/mrbgems/mruby-compar-ext"
+  conf.gem "#{root}/mrbgems/mruby-enum-ext"
+  conf.gem "#{root}/mrbgems/mruby-string-ext"
+  conf.gem "#{root}/mrbgems/mruby-array-ext"
+  conf.gem "#{root}/mrbgems/mruby-hash-ext"
+  conf.gem "#{root}/mrbgems/mruby-range-ext"
+  conf.gem "#{root}/mrbgems/mruby-proc-ext"
+  conf.gem "#{root}/mrbgems/mruby-symbol-ext"
+  conf.gem "#{root}/mrbgems/mruby-object-ext"
 
   conf.test_runner.command = 'env'
 end
