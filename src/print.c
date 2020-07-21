@@ -10,13 +10,34 @@
 #include <mruby/error.h>
 #include <string.h>
 
-#ifndef MRB_DISABLE_STDIO
+#if !defined(MRB_DISABLE_STDIO)
 static void
 printcstr(const char *str, size_t len, FILE *stream)
 {
   if (str) {
     fwrite(str, len, 1, stream);
     putc('\n', stream);
+  }
+}
+
+static void
+printstr(mrb_value obj, FILE *stream)
+{
+  if (mrb_string_p(obj)) {
+    printcstr(RSTRING_PTR(obj), RSTRING_LEN(obj), stream);
+  }
+}
+#elif defined(_TINYOS_KERNEL)
+typedef void FILE;
+#define stdout 0
+int putchar(int);
+static void
+printcstr(const char *str, size_t len, FILE *stream)
+{
+  if (str) {
+    while (len-- > 0)
+      putchar(*str++);
+    putchar('\n');
   }
 }
 

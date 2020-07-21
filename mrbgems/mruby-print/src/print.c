@@ -1,7 +1,7 @@
 #include <mruby.h>
 
 #ifdef MRB_DISABLE_STDIO
-# error print conflicts 'MRB_DISABLE_STDIO' configuration in your 'build_config.rb'
+//# error print conflicts 'MRB_DISABLE_STDIO' configuration in your 'build_config.rb'
 #endif
 
 #include <mruby/string.h>
@@ -34,9 +34,16 @@ printstr(mrb_state *mrb, mrb_value obj)
       }
       mrb_free(mrb, utf16);
     } else
-#endif
+#elif defined(_TINYOS_KERNEL)
+    int len = (int)RSTRING_LEN(obj);
+    char *p = RSTRING_PTR(obj);
+    int putchar(int);
+    while (len-- > 0)
+      putchar(*p++);
+#else
       fwrite(RSTRING_PTR(obj), RSTRING_LEN(obj), 1, stdout);
     fflush(stdout);
+#endif
   }
 }
 
