@@ -74,7 +74,53 @@ each_backtrace(mrb_state *mrb, ptrdiff_t ciidx, const mrb_code *pc0, each_backtr
   }
 }
 
-#ifndef MRB_DISABLE_STDIO
+#if defined(_TINYOS_KERNEL)
+
+void printf(const char *fmt, ...);
+static void
+print_backtrace(mrb_state *mrb, struct RObject *exc, mrb_value backtrace)
+{
+  mrb_int i;
+  mrb_int n = RARRAY_LEN(backtrace);
+  mrb_value *loc, mesg;
+
+  if (n != 0) {
+    printf("trace (most recent call last):\n");
+    for (i=n-1,loc=&RARRAY_PTR(backtrace)[i]; i>0; i--,loc--) {
+      if (mrb_string_p(*loc)) {
+        printf("\t[%d] %.*s\n",
+                (int)i, (int)RSTRING_LEN(*loc), RSTRING_PTR(*loc));
+      }
+    }
+    if (mrb_string_p(*loc)) {
+      printf("%.*s: ", (int)RSTRING_LEN(*loc), RSTRING_PTR(*loc));
+    }
+  }
+  mesg = mrb_exc_inspect(mrb, mrb_obj_value(exc));
+  printf("%.*s\n", (int)RSTRING_LEN(mesg), RSTRING_PTR(mesg));
+}
+
+/* mrb_print_backtrace
+
+   function to retrieve backtrace information from the last exception.
+*/
+
+MRB_API void
+mrb_print_backtrace(mrb_state *mrb)
+{
+  mrb_value backtrace;
+
+  if (!mrb->exc) {
+    return;
+  }
+
+  backtrace = mrb_obj_iv_get(mrb, mrb->exc, mrb_intern_lit(mrb, "backtrace"));
+  if (mrb_nil_p(backtrace)) return;
+  if (!mrb_array_p(backtrace)) backtrace = mrb_unpack_backtrace(mrb, backtrace);
+  print_backtrace(mrb, mrb->exc, backtrace);
+}
+
+#elif !defined(MRB_DISABLE_STDIO)
 
 static void
 print_backtrace(mrb_state *mrb, struct RObject *exc, mrb_value backtrace)
@@ -119,6 +165,7 @@ mrb_print_backtrace(mrb_state *mrb)
   if (!mrb_array_p(backtrace)) backtrace = mrb_unpack_backtrace(mrb, backtrace);
   print_backtrace(mrb, mrb->exc, backtrace);
 }
+
 #else
 
 MRB_API void

@@ -10,24 +10,8 @@
 #include <mruby/error.h>
 #include <string.h>
 
-#if !defined(MRB_DISABLE_STDIO)
-static void
-printcstr(const char *str, size_t len, FILE *stream)
-{
-  if (str) {
-    fwrite(str, len, 1, stream);
-    putc('\n', stream);
-  }
-}
+#if defined(_TINYOS_KERNEL)
 
-static void
-printstr(mrb_value obj, FILE *stream)
-{
-  if (mrb_string_p(obj)) {
-    printcstr(RSTRING_PTR(obj), RSTRING_LEN(obj), stream);
-  }
-}
-#elif defined(_TINYOS_KERNEL)
 typedef void FILE;
 #define stdout 0
 int putchar(int);
@@ -48,6 +32,26 @@ printstr(mrb_value obj, FILE *stream)
     printcstr(RSTRING_PTR(obj), RSTRING_LEN(obj), stream);
   }
 }
+
+#elif !defined(MRB_DISABLE_STDIO)
+
+static void
+printcstr(const char *str, size_t len, FILE *stream)
+{
+  if (str) {
+    fwrite(str, len, 1, stream);
+    putc('\n', stream);
+  }
+}
+
+static void
+printstr(mrb_value obj, FILE *stream)
+{
+  if (mrb_string_p(obj)) {
+    printcstr(RSTRING_PTR(obj), RSTRING_LEN(obj), stream);
+  }
+}
+
 #else
 # define printcstr(str, len, stream) (void)0
 # define printstr(obj, stream) (void)0
